@@ -43,7 +43,8 @@ const staffMembers = [
     category: "interns",
     title: "Intern designer",
     reportsTo: "nick-thompson",
-  },
+  }, 
+  
   {
     _id: 5,
     name: "Simon",
@@ -103,6 +104,7 @@ const categories = [
   },
 ];
 
+// get category name
 const retrieveCategoryName = (categoryList, category) => {
   let categoryName = null;
   for (let item of categoryList) {
@@ -112,15 +114,27 @@ const retrieveCategoryName = (categoryList, category) => {
   }
   return categoryName;
 };
+const populateChildren = (children, slug, spacer) => {
+  for (let item of children) {
+    if (slug == item.reportsTo) {
+      console.log(spacer, item.description);
 
-const createHierarchies = (staffMemberList, categoryList, reportTo) => {
+      if (item.children) {
+        const spacer = "       *";
+        populateChildren(item.children, item.slug, spacer);
+      }
+    }
+  }
+};
+
+const createHierarchies = (staffMemberList, categoryList, reportsTo) => {
   const hierarchList = [];
   let staffMembers = null;
-  if (reportTo === "") {
+  if (reportsTo === "") {
     staffMembers = staffMemberList.filter((member) => member.reportsTo === "");
   } else {
     staffMembers = staffMemberList.filter(
-      (item) => item.reportsTo === reportTo
+      (item) => item.reportsTo === reportsTo
     );
   }
 
@@ -132,6 +146,7 @@ const createHierarchies = (staffMemberList, categoryList, reportTo) => {
     let newHierarchy = {
       description: `${item.name} ${item.surname} - ${item.title}: ${categoryName}`,
       reportsTo: item.reportsTo,
+      slug: item.slug,
       children: child.length != 0 ? child.map((i) => i) : null,
     };
     Object.keys(newHierarchy).forEach((key) => {
@@ -139,6 +154,7 @@ const createHierarchies = (staffMemberList, categoryList, reportTo) => {
         delete newHierarchy[key];
       }
     });
+
     hierarchList.push({ ...newHierarchy });
   }
 
@@ -146,18 +162,17 @@ const createHierarchies = (staffMemberList, categoryList, reportTo) => {
 };
 
 const retrieveHierarchies = () => {
-  const staffList = staffMembers;
-  const categoryList = categories;
-  const hierarchyList = createHierarchies(staffList, categoryList, ""); 
+  const hierarchyList = createHierarchies(staffMembers, categories, "");
 
-  
-  console.info(
-    ` *${hierarchyList[0].description} \n     *${hierarchyList[0].children[0].description}  \n          *${hierarchyList[0].children[0].children[0].description}\n`
-  );
-
-  console.info(` *${hierarchyList[1].description} \n     *${hierarchyList[1].children[0].description}   \n     *${hierarchyList[1].children[1].description}    \n     *${hierarchyList[1].children[2].description}    \n     *${hierarchyList[1].children[3].description}  \n`);
-
-  console.info(` *${hierarchyList[2].description}`);
+  const spacer = "     *";
+  for (let item of hierarchyList) {
+    if (item.reportsTo == "") {
+      console.log("   *", item.description);
+      if (item.children) {
+        populateChildren(item.children, item.slug, spacer);
+      }
+    }
+  }
 
   return hierarchyList;
 };
